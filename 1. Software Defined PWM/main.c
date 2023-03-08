@@ -13,8 +13,9 @@
 
 #include <msp430.h>
 
-unsigned short defaultT = 999;
-unsigned short dutyCycleIncrement = 100;
+unsigned short defaultT = 999;                      // declare and initialize a variable for the default timer period
+unsigned short dutyCycleIncrement = 100;            // declare and initialize a variable for the duty cycle increment
+
 
 void gpioInit();
 void timerInit();
@@ -29,7 +30,7 @@ int main(void)
     PM5CTL0 &= ~LOCKLPM5; // disable GPIO power-on default high-impedance mode to active previously configured port settings
 
     __bis_SR_register(LPM3_bits | GIE); // enter LPM3, enable interrupts
-    __no_operation(); // for debugger
+    __no_operation(); // no operation for debugger
 
 }
 
@@ -61,29 +62,29 @@ void gpioInit() {
 
 void timerInit() {
     TB0CCTL1 = TB0CCTL2 |= CCIE; // TBCCR1, TBCCR2, and TBCC2 interrupt enabled
-    TB0CCR0 = defaultT;
+    TB0CCR0 = defaultT;          // set to defaultT which is equal to 999
     TB0CCR1 = TB0CCR2 = (defaultT>>1); // initial duty cycle is default period / 2
     TB0CTL = TBSSEL_1 | MC_1 | TBCLR | TBIE; // ACLK, up mode, clear TBR, enable interrupt
 }
 
-// port 2 interrupt service routine
+// port 2.3 triggered
 #pragma vector=PORT2_VECTOR
 __interrupt void Port_2(void) {
     P2IFG &= ~BIT3; // clear P2.3 interrupt flag
-    if(TB0CCR1 >= defaultT)
-        TB0CCR1 = 0;
+    if(TB0CCR1 >= defaultT)    //TBOCCR1 greater or equal to 999
+        TB0CCR1 = 0;           // reset to 0
     else
-        TB0CCR1 += dutyCycleIncrement;
+        TB0CCR1 += dutyCycleIncrement;     // else increment TBOCCR1 by the duty cycle
 }
 
-// port 4 interrupt service routine
+// port 4.3 triggered
 #pragma vector=PORT4_VECTOR
 __interrupt void Port_4(void) {
-    P4IFG &= ~BIT1; // clear P2.3 interrupt flag
-    if(TB0CCR2 >= defaultT)
-        TB0CCR2 = 0;
+    P4IFG &= ~BIT1; // clear P4.3 interrupt flag
+    if(TB0CCR2 >= defaultT)    //TBOCCR2 greater or equal to 999
+        TB0CCR2 = 0;           // reset to 0
     else
-        TB0CCR2 += dutyCycleIncrement;
+        TB0CCR2 += dutyCycleIncrement;      // else increment TBOCCR2 by the duty cycle
 }
 
 // Timer0_B3 interrupt vector (TBIV) handler
